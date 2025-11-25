@@ -65,8 +65,8 @@ def inject_brand_css() -> None:
             background: #0D0D0D;
           }
           .material-icons, .stSvg { font-family: 'Material Icons Outlined' !important; }
-          .hb-hero { padding: 12px 18px; background: linear-gradient(90deg, rgba(255,107,0,0.12), rgba(30,106,109,0.18)); border: 1px solid #6C6C6C; border-radius: 14px; }
-          .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #F5F5F5; margin: 4px 0 6px 0; font-size: 28px; }
+          .hb-hero { padding: 12px 0; }
+          .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #F5F5F5; margin: 4px 0 6px 0; font-size: 30px; }
           .hb-eyebrow { color: #FF6B00; letter-spacing: 0.08em; font-size: 13px; text-transform: uppercase; margin-bottom: 6px; }
           .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #F5F5F5; margin: 0 0 6px 0; }
           .hb-eyebrow { color: #FF6B00; letter-spacing: 0.08em; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
@@ -94,7 +94,7 @@ def render_home(data: Dict[str, Any]) -> None:
         with cols[1]:
             st.markdown("<div class='hb-hero'>", unsafe_allow_html=True)
             st.markdown("<div class='hb-eyebrow'>Hawker Boys · From humble beginnings</div>", unsafe_allow_html=True)
-            st.markdown("<div class='hb-title'>Hawker Boys Control Room</div>", unsafe_allow_html=True)
+            st.markdown("<div class='hb-title'>Hawker Boys Portal</div>", unsafe_allow_html=True)
             st.markdown("<div class='hb-desc'>Announcements first, then programme health at a glance. Admins sign in from the sidebar for extra controls.</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -102,15 +102,14 @@ def render_home(data: Dict[str, Any]) -> None:
     ann_col1, ann_col2 = st.columns([2, 1])
     with ann_col1:
         st.markdown("<div class='hb-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='hb-chip'>Latest</div>", unsafe_allow_html=True)
         announcements = sorted(data["announcements"], key=lambda a: a["published_at"], reverse=True)[:4]
         for ann in announcements:
             st.markdown(f"**{ann['title']}**  \n{ann['body']}  \n<span style='color:#B8B8B8;'>{fmt_date(ann['published_at'])}</span>", unsafe_allow_html=True)
-            st.markdown("---")
+            st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
     with ann_col2:
         st.markdown("<div class='hb-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='hb-chip'>Pulse</div>", unsafe_allow_html=True)
+        st.markdown("<div class='hb-desc' style='margin-bottom:6px;'>Programme snapshot</div>", unsafe_allow_html=True)
         cols = st.columns(3)
         cols[0].metric("Trainees", len(data["trainees"]))
         cols[1].metric("Mentors", len(data["mentors"]))
