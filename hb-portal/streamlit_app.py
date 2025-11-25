@@ -11,15 +11,18 @@ import streamlit as st
 
 from streamlit_data import DATA_FILE, load_data, new_id, reset_data, save_data
 
-st.set_page_config(page_title="Hawker Boys Portal (Streamlit)", layout="wide", page_icon="🔥")
+ASSETS_DIR = Path(__file__).parent / "Assets"
+LOGO_PATH = ASSETS_DIR / "Logo_bgr.png"
+
+st.set_page_config(page_title="Hawker Boys Portal", layout="wide", page_icon=str(LOGO_PATH if LOGO_PATH.exists() else "🔥"))
 
 UPLOAD_DIR = Path(__file__).parent / "streamlit_uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# Two-page navigation with icon labels.
+# Two-page navigation; simple labels to keep the UI focused.
 NAV_ITEMS: List[Tuple[str, str]] = [
-    ("Dashboard", "🏠"),
-    ("Uploads", "📁"),
+    ("Dashboard", "Dashboard"),
+    ("Uploads", "Uploads"),
 ]
 
 
@@ -46,8 +49,7 @@ def lookup_by_id(items: List[Dict[str, Any]], item_id: str, label: str = "name")
 
 
 def page_title(title: str, description: str | None = None) -> None:
-    st.markdown("<div class='hb-eyebrow'>Hawker Boys · From humble beginnings</div>", unsafe_allow_html=True)
-    st.markdown(f"<h2 class='hb-title'>{title}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h3 class='hb-section'>{title}</h3>", unsafe_allow_html=True)
     if description:
         st.markdown(f"<p class='hb-desc'>{description}</p>", unsafe_allow_html=True)
 
@@ -57,14 +59,19 @@ def inject_brand_css() -> None:
         """
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap');
-          html, body, [class^="st"] {
+          html, body, .stApp {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
             color: #F5F5F5;
             background: #0D0D0D;
           }
+          .material-icons, .stSvg { font-family: 'Material Icons Outlined' !important; }
+          .hb-hero { padding: 12px 18px; background: linear-gradient(90deg, rgba(255,107,0,0.12), rgba(30,106,109,0.18)); border: 1px solid #6C6C6C; border-radius: 14px; }
+          .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #F5F5F5; margin: 4px 0 6px 0; font-size: 28px; }
+          .hb-eyebrow { color: #FF6B00; letter-spacing: 0.08em; font-size: 13px; text-transform: uppercase; margin-bottom: 6px; }
           .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #F5F5F5; margin: 0 0 6px 0; }
           .hb-eyebrow { color: #FF6B00; letter-spacing: 0.08em; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
           .hb-desc { color: #B8B8B8; }
+          .hb-section { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; margin: 24px 0 6px 0; color: #F5F5F5; }
           .stProgress > div > div { background: linear-gradient(90deg, #FF6B00, #C44A00); }
           .hb-card { background: #2A2A2A; border: 1px solid #6C6C6C; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
           .hb-chip { display: inline-block; background: rgba(255,107,0,0.12); color: #FF6B00; padding: 4px 10px; border-radius: 999px; font-size: 12px; }
@@ -79,39 +86,39 @@ def inject_brand_css() -> None:
 
 
 def render_home(data: Dict[str, Any]) -> None:
-    page_title("One-page portal", "Announcements up front, with program snapshots below. Admin controls unlock after admin sign-in.")
+    hero = st.container()
+    with hero:
+        cols = st.columns([1, 3])
+        with cols[0]:
+            st.image(str(LOGO_PATH if LOGO_PATH.exists() else ASSETS_DIR / "Hawker_Boys_logo_new.png"), width=150)
+        with cols[1]:
+            st.markdown("<div class='hb-hero'>", unsafe_allow_html=True)
+            st.markdown("<div class='hb-eyebrow'>Hawker Boys · From humble beginnings</div>", unsafe_allow_html=True)
+            st.markdown("<div class='hb-title'>Hawker Boys Control Room</div>", unsafe_allow_html=True)
+            st.markdown("<div class='hb-desc'>Announcements first, then programme health at a glance. Admins sign in from the sidebar for extra controls.</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    hero_cols = st.columns([3, 2])
-    with hero_cols[0]:
-        st.markdown(
-            """
-            <div class="hb-card">
-              <div class="hb-chip">Latest</div>
-              <h3 style="margin:6px 0 4px 0;">Announcements</h3>
-            """,
-            unsafe_allow_html=True,
-        )
-        announcements = sorted(data["announcements"], key=lambda a: a["published_at"], reverse=True)[:3]
+    st.markdown("### Announcements & Updates")
+    ann_col1, ann_col2 = st.columns([2, 1])
+    with ann_col1:
+        st.markdown("<div class='hb-card'>", unsafe_allow_html=True)
+        st.markdown("<div class='hb-chip'>Latest</div>", unsafe_allow_html=True)
+        announcements = sorted(data["announcements"], key=lambda a: a["published_at"], reverse=True)[:4]
         for ann in announcements:
-            st.markdown(f"- **{ann['title']}** — {ann['body']}  \n<span style='color:#B8B8B8;'>{fmt_date(ann['published_at'])}</span>", unsafe_allow_html=True)
+            st.markdown(f"**{ann['title']}**  \n{ann['body']}  \n<span style='color:#B8B8B8;'>{fmt_date(ann['published_at'])}</span>", unsafe_allow_html=True)
+            st.markdown("---")
         st.markdown("</div>", unsafe_allow_html=True)
-    with hero_cols[1]:
-        st.markdown(
-            """
-            <div class="hb-card">
-              <div class="hb-chip">Pulse</div>
-              <h3 style="margin:6px 0 4px 0;">Programme snapshot</h3>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    with ann_col2:
+        st.markdown("<div class='hb-card'>", unsafe_allow_html=True)
+        st.markdown("<div class='hb-chip'>Pulse</div>", unsafe_allow_html=True)
         cols = st.columns(3)
         cols[0].metric("Trainees", len(data["trainees"]))
         cols[1].metric("Mentors", len(data["mentors"]))
         cols[2].metric("Employers", len(data["employers"]))
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # Progress & quests
-    st.markdown("### Progress & Achievements")
+    page_title("Progress & achievements")
     progress_cols = st.columns(2)
     trainee = data["trainees"][0] if data["trainees"] else None
     if trainee:
@@ -135,7 +142,7 @@ def render_home(data: Dict[str, Any]) -> None:
             if badge["id"] in earned_ids:
                 progress_cols[1].write(f"🏅 {badge['title']} — {badge['description']}")
 
-    st.markdown("### Shifts, Compliance, and Support")
+    page_title("Shifts, compliance, and support")
     ops_cols = st.columns(3)
     shifts = sorted(data["shifts"], key=lambda s: s["start"])
     with ops_cols[0]:
@@ -155,7 +162,7 @@ def render_home(data: Dict[str, Any]) -> None:
         else:
             st.write("All clear.")
 
-    st.markdown("### Feedback pulse")
+    page_title("Feedback pulse")
     feedback = sorted(data["customer_feedback"], key=lambda f: f["created_at"], reverse=True)[:5]
     for item in feedback:
         trainee_name = lookup_by_id(data["trainees"], item["trainee_id"]) or item["trainee_id"]
@@ -163,7 +170,7 @@ def render_home(data: Dict[str, Any]) -> None:
 
     # Admin extras
     if st.session_state.get("hb_user", {}).get("role") == "ADMIN":
-        st.markdown("### Admin controls")
+        page_title("Admin controls")
         role_counts = Counter(user["role"] for user in data["users"])
         cols = st.columns(4)
         for idx, role in enumerate(["TRAINEE", "MENTOR", "EMPLOYER", "ADMIN"]):
@@ -272,7 +279,7 @@ def sidebar_nav() -> str:
             st.session_state["hb_user"] = {"email": email, "role": role}
             st.success(f"Signed in as {role}")
 
-    nav_labels = [f"{icon} {label}" for label, icon in NAV_ITEMS]
+    nav_labels = [label for label, _ in NAV_ITEMS]
     nav_choice = st.sidebar.radio("Navigation", nav_labels)
     nav = NAV_ITEMS[nav_labels.index(nav_choice)][0]
 
