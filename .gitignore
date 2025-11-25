@@ -25,6 +25,8 @@ node_modules/
 
 # Streamlit
 .streamlit/secrets.toml
+hb-portal/streamlit_data.json
+hb-portal/streamlit_uploads/
 
 # Coverage
 htmlcov/
