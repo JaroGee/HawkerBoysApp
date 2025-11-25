@@ -59,26 +59,23 @@ def inject_brand_css() -> None:
         """
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap');
-          html, body, .stApp {
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-            color: #F5F5F5;
-            background: #0D0D0D;
-          }
+          html, body, .stApp { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #0D0D0D; background: #EAE7E2; }
           .material-icons, .stSvg { font-family: 'Material Icons Outlined' !important; }
           .hb-hero { padding: 12px 0; }
-          .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #F5F5F5; margin: 4px 0 6px 0; font-size: 30px; }
-          .hb-eyebrow { color: #FF6B00; letter-spacing: 0.08em; font-size: 13px; text-transform: uppercase; margin-bottom: 6px; }
-          .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #F5F5F5; margin: 0 0 6px 0; }
+          .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #0D0D0D; margin: 2px 0 4px 0; font-size: 26px; }
           .hb-eyebrow { color: #FF6B00; letter-spacing: 0.08em; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
-          .hb-desc { color: #B8B8B8; }
-          .hb-section { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; margin: 24px 0 6px 0; color: #F5F5F5; }
+          .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #0D0D0D; margin: 0 0 6px 0; }
+          .hb-eyebrow { color: #FF6B00; letter-spacing: 0.08em; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
+          .hb-desc { color: #2A2A2A; }
+          .hb-section { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; margin: 18px 0 6px 0; color: #0D0D0D; font-size: 18px; }
           .stProgress > div > div { background: linear-gradient(90deg, #FF6B00, #C44A00); }
-          .hb-card { background: #2A2A2A; border: 1px solid #6C6C6C; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+          .hb-card { background: #ffffff; border: 1px solid #B8B8B8; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
           .hb-chip { display: inline-block; background: rgba(255,107,0,0.12); color: #FF6B00; padding: 4px 10px; border-radius: 999px; font-size: 12px; }
           .stDownloadButton button, .stButton button { background: #FF6B00; color: #0D0D0D; border: none; }
           .stDownloadButton button:hover, .stButton button:hover { background: #C44A00; color: #0D0D0D; }
-          .stTextInput > div > input, textarea, select { background: #1A1A1A !important; color: #F5F5F5 !important; border-radius: 8px; border: 1px solid #6C6C6C; }
+          .stTextInput > div > input, textarea, select { background: #F5F5F5 !important; color: #0D0D0D !important; border-radius: 8px; border: 1px solid #B8B8B8; }
           .stSlider > div[data-baseweb="slider"] > div { background: #FF6B00 !important; }
+          .st-emotion-cache-1av9zj7 p { color: #2A2A2A; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -109,7 +106,6 @@ def render_home(data: Dict[str, Any]) -> None:
         st.markdown("</div>", unsafe_allow_html=True)
     with ann_col2:
         st.markdown("<div class='hb-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='hb-desc' style='margin-bottom:6px;'>Programme snapshot</div>", unsafe_allow_html=True)
         cols = st.columns(3)
         cols[0].metric("Trainees", len(data["trainees"]))
         cols[1].metric("Mentors", len(data["mentors"]))
