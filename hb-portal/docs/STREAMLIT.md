@@ -11,4 +11,5 @@ This repository now ships a Streamlit clone of the Next.js portal for rapid demo
 ## Notes
 - State lives in `streamlit_data.json` in the repo root. Delete it or hit **Reset sample data** in the sidebar to reseed.
 - Uploaded files land in `streamlit_uploads/`. The metadata shows up in the **Uploads** page.
-- The navigation mirrors the portal: dashboards per role, announcements, quests/badges/progress, schedule & compliance, messages, uploads, help, and the public feedback form. Admins can export customer feedback as CSV.
+- One-page layout: dashboard shows announcements first, then progress/quests/badges, shifts/compliance/support, and recent feedback. A separate Uploads page handles documents.
+- Sidebar has a lightweight role switcher (default USER). Switch to ADMIN to unlock counts and CSV export (demo admin: `admin@hawkerboys.com`).

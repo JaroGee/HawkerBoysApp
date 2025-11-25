@@ -5,32 +5,21 @@ from collections import Counter
 from datetime import datetime
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import streamlit as st
 
 from streamlit_data import DATA_FILE, load_data, new_id, reset_data, save_data
 
-st.set_page_config(page_title="Hawker Boys Portal (Streamlit)", layout="wide", page_icon="🍜")
+st.set_page_config(page_title="Hawker Boys Portal (Streamlit)", layout="wide", page_icon="🔥")
 
 UPLOAD_DIR = Path(__file__).parent / "streamlit_uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-NAV_ITEMS = [
-    "Home",
-    "Trainee dashboard",
-    "Mentor dashboard",
-    "Employer dashboard",
-    "Admin dashboard",
-    "Announcements",
-    "Progress",
-    "Quests",
-    "Badges",
-    "Schedule & compliance",
-    "Messages",
-    "Uploads",
-    "Help",
-    "Public feedback",
+# Two-page navigation with icon labels.
+NAV_ITEMS: List[Tuple[str, str]] = [
+    ("Dashboard", "🏠"),
+    ("Uploads", "📁"),
 ]
 
 
@@ -57,258 +46,131 @@ def lookup_by_id(items: List[Dict[str, Any]], item_id: str, label: str = "name")
 
 
 def page_title(title: str, description: str | None = None) -> None:
-    st.markdown("### 🍜 Hawker Boys Portal")
-    st.markdown(f"## {title}")
+    st.markdown("<div class='hb-eyebrow'>Hawker Boys · From humble beginnings</div>", unsafe_allow_html=True)
+    st.markdown(f"<h2 class='hb-title'>{title}</h2>", unsafe_allow_html=True)
     if description:
-        st.caption(description)
+        st.markdown(f"<p class='hb-desc'>{description}</p>", unsafe_allow_html=True)
+
+
+def inject_brand_css() -> None:
+    st.markdown(
+        """
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+          html, body, [class^="st"] {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            color: #F5F5F5;
+            background: #0D0D0D;
+          }
+          .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #F5F5F5; margin: 0 0 6px 0; }
+          .hb-eyebrow { color: #FF6B00; letter-spacing: 0.08em; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
+          .hb-desc { color: #B8B8B8; }
+          .stProgress > div > div { background: linear-gradient(90deg, #FF6B00, #C44A00); }
+          .hb-card { background: #2A2A2A; border: 1px solid #6C6C6C; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+          .hb-chip { display: inline-block; background: rgba(255,107,0,0.12); color: #FF6B00; padding: 4px 10px; border-radius: 999px; font-size: 12px; }
+          .stDownloadButton button, .stButton button { background: #FF6B00; color: #0D0D0D; border: none; }
+          .stDownloadButton button:hover, .stButton button:hover { background: #C44A00; color: #0D0D0D; }
+          .stTextInput > div > input, textarea, select { background: #1A1A1A !important; color: #F5F5F5 !important; border-radius: 8px; border: 1px solid #6C6C6C; }
+          .stSlider > div[data-baseweb="slider"] > div { background: #FF6B00 !important; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_home(data: Dict[str, Any]) -> None:
-    page_title("Streamlit experience", "Role-aware PDPA-friendly portal translated from the Next.js app.")
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Trainees", len(data["trainees"]))
-    col2.metric("Mentors", len(data["mentors"]))
-    col3.metric("Employers", len(data["employers"]))
+    page_title("One-page portal", "Announcements up front, with program snapshots below. Admin controls unlock after admin sign-in.")
 
-    st.markdown(
-        """
-        **Unified training journeys** — Track WSQ certifications, quests, compliance, and shifts in one workspace.  
-        **Mentor intelligence** — Assessment templates, aftercare, and live check-ins stay in one place.  
-        **Employer-ready** — Shift planning, attendance, and customer feedback loops give instant context.
-        """
-    )
-    st.info("Use the sidebar to move between dashboards, announcements, quests, uploads, and the public feedback form.")
+    hero_cols = st.columns([3, 2])
+    with hero_cols[0]:
+        st.markdown(
+            """
+            <div class="hb-card">
+              <div class="hb-chip">Latest</div>
+              <h3 style="margin:6px 0 4px 0;">Announcements</h3>
+            """,
+            unsafe_allow_html=True,
+        )
+        announcements = sorted(data["announcements"], key=lambda a: a["published_at"], reverse=True)[:3]
+        for ann in announcements:
+            st.markdown(f"- **{ann['title']}** — {ann['body']}  \n<span style='color:#B8B8B8;'>{fmt_date(ann['published_at'])}</span>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    with hero_cols[1]:
+        st.markdown(
+            """
+            <div class="hb-card">
+              <div class="hb-chip">Pulse</div>
+              <h3 style="margin:6px 0 4px 0;">Programme snapshot</h3>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        cols = st.columns(3)
+        cols[0].metric("Trainees", len(data["trainees"]))
+        cols[1].metric("Mentors", len(data["mentors"]))
+        cols[2].metric("Employers", len(data["employers"]))
 
-
-def render_trainee_dashboard(data: Dict[str, Any]) -> None:
-    page_title("Trainee dashboard", "Progress, shifts, and announcements for a selected trainee.")
-    trainee = st.selectbox("Choose trainee", data["trainees"], format_func=lambda t: t["name"])
-    trainee_id = trainee["id"]
-
-    certs = [c for c in data["trainee_certifications"] if c["trainee_id"] == trainee_id]
-    quests = [q for q in data["quest_progress"] if q["trainee_id"] == trainee_id]
-    completion = int((len(certs) / max(1, len(quests) or 1)) * 100)
-    completion_display = min(completion, 100)
-
-    st.progress(completion_display, text=f"{completion_display}% completion based on certifications vs quests")
-
-    col1, col2 = st.columns(2)
-    col1.subheader("WSQ achievements")
-    if certs:
+    # Progress & quests
+    st.markdown("### Progress & Achievements")
+    progress_cols = st.columns(2)
+    trainee = data["trainees"][0] if data["trainees"] else None
+    if trainee:
+        trainee_id = trainee["id"]
+        certs = [c for c in data["trainee_certifications"] if c["trainee_id"] == trainee_id]
+        quests = [q for q in data["quest_progress"] if q["trainee_id"] == trainee_id]
+        completion = int((len(certs) / max(1, len(quests) or 1)) * 100)
+        completion_display = min(completion, 100)
+        progress_cols[0].progress(completion_display, text=f"{completion_display}% WSQ completion vs quests")
+        progress_cols[0].markdown("**Certifications**")
         for cert in certs:
             cert_meta = lookup_by_id(data["certifications"], cert["certification_id"], "name")
-            col1.write(f"- {cert_meta or 'Certification'} · issued {fmt_date(cert['issued_at'])}")
-    else:
-        col1.write("No certifications yet.")
+            progress_cols[0].write(f"- {cert_meta or 'Certification'} ({fmt_date(cert['issued_at'])})")
+        progress_cols[1].markdown("**Quests & Badges**")
+        for row in quests:
+            quest = next((q for q in data["quests"] if q["id"] == row["quest_id"]), None)
+            if quest:
+                progress_cols[1].write(f"- {quest['title']} · {row['status']} · {quest['points']} pts")
+        earned_ids = {b["badge_id"] for b in data["trainee_badges"] if b["trainee_id"] == trainee_id}
+        for badge in data["badges"]:
+            if badge["id"] in earned_ids:
+                progress_cols[1].write(f"🏅 {badge['title']} — {badge['description']}")
 
-    col2.subheader("Quests")
-    for quest_row in quests[:5]:
-        quest = next((q for q in data["quests"] if q["id"] == quest_row["quest_id"]), None)
-        if quest:
-            col2.write(f"- {quest['title']} · {quest_row['status']} ({quest['points']} pts)")
-
-    st.divider()
-
-    st.subheader("Upcoming shifts")
-    upcoming_shifts = sorted(
-        [s for s in data["shifts"] if s["trainee_id"] == trainee_id],
-        key=lambda s: s["start"],
-    )
-    for shift in upcoming_shifts:
-        st.write(f"**{shift['location']}** · {fmt_date(shift['start'], True)} · {shift['status']}")
-
-    st.subheader("Announcements")
-    targeted = [a for a in data["announcements"] if a["audience"] in ("ALL", "TRAINEES")]
-    for ann in sorted(targeted, key=lambda a: a["published_at"], reverse=True):
-        st.write(f"**{ann['title']}** — {ann['body']} ({ann['audience']})")
-
-
-def render_mentor_dashboard(data: Dict[str, Any]) -> None:
-    page_title("Mentor ops", "Recent assessments and open aftercare tickets.")
-    assessments = sorted(data["assessments"], key=lambda a: a["created_at"], reverse=True)
-    tickets = [t for t in data["support_tickets"] if t.get("status") != "CLOSED"]
-
-    st.subheader("Recent assessments")
-    rows = []
-    for row in assessments:
-        trainee_name = lookup_by_id(data["trainees"], row["trainee_id"]) or row["trainee_id"]
-        template = lookup_by_id(data["assessment_templates"], row["template_id"], "name") or "Template"
-        score_text = ", ".join(f"{s['key']}: {s['value']}" for s in row.get("scores", []))
-        rows.append(
-            {
-                "Trainee": trainee_name,
-                "Template": template,
-                "Scores": score_text,
-                "Created": fmt_date(row["created_at"]),
-                "Notes": row.get("notes", ""),
-            }
-        )
-    st.dataframe(rows, use_container_width=True)
-
-    st.subheader("Support tickets")
-    if tickets:
-        for ticket in tickets:
-            name = lookup_by_id(data["trainees"], ticket["trainee_id"]) or ticket["trainee_id"]
-            st.write(f"- **{name}** · {ticket['category']} · {ticket['message']} ({ticket['status']})")
-    else:
-        st.write("No open tickets.")
-
-
-def render_employer_dashboard(data: Dict[str, Any]) -> None:
-    page_title("Employer hub", "Plan shifts and review customer sentiment.")
+    st.markdown("### Shifts, Compliance, and Support")
+    ops_cols = st.columns(3)
     shifts = sorted(data["shifts"], key=lambda s: s["start"])
-    feedback = sorted(data["customer_feedback"], key=lambda f: f["created_at"], reverse=True)
+    with ops_cols[0]:
+        st.markdown("**Upcoming shifts**")
+        for shift in shifts[:4]:
+            st.write(f"- {fmt_date(shift['start'], True)} · {shift['location']} · {shift['status']}")
+    with ops_cols[1]:
+        st.markdown("**Compliance**")
+        for event in sorted(data["compliance_events"], key=lambda e: e["start"])[:4]:
+            st.write(f"- {event['type']} · {fmt_date(event['start'])}")
+    with ops_cols[2]:
+        st.markdown("**Support tickets**")
+        tickets = sorted(data["support_tickets"], key=lambda t: t["created_at"], reverse=True)[:4]
+        if tickets:
+            for ticket in tickets:
+                st.write(f"- {ticket['category']} · {ticket['message']} ({ticket['status']})")
+        else:
+            st.write("All clear.")
 
-    st.subheader("Shift planner")
-    for shift in shifts:
-        trainee_name = lookup_by_id(data["trainees"], shift["trainee_id"]) or shift["trainee_id"]
-        employer_name = lookup_by_id(data["employers"], shift["employer_id"], "company_name") or shift["employer_id"]
-        st.write(f"- {fmt_date(shift['start'], True)} · {shift['location']} · {trainee_name} ({employer_name}) — {shift['status']}")
-
-    st.subheader("Customer feedback pulse")
+    st.markdown("### Feedback pulse")
+    feedback = sorted(data["customer_feedback"], key=lambda f: f["created_at"], reverse=True)[:5]
     for item in feedback:
         trainee_name = lookup_by_id(data["trainees"], item["trainee_id"]) or item["trainee_id"]
         st.write(f"- {trainee_name}: {item['rating']}/5 — {item['comment']}")
 
-
-def feedback_csv(data: Dict[str, Any]) -> str:
-    buffer = StringIO()
-    writer = csv.writer(buffer)
-    writer.writerow(["traineeName", "rating", "comment", "receiptCode", "createdAt"])
-    for row in data["customer_feedback"]:
-        trainee_name = lookup_by_id(data["trainees"], row["trainee_id"]) or row["trainee_id"]
-        writer.writerow([trainee_name, row["rating"], row["comment"], row.get("receipt_code", ""), row["created_at"]])
-    return buffer.getvalue()
-
-
-def render_admin_dashboard(data: Dict[str, Any]) -> None:
-    page_title("Admin control center", "Counts, announcements, audit log, and exports.")
-    role_counts = Counter(user["role"] for user in data["users"])
-    cols = st.columns(4)
-    for idx, role in enumerate(["TRAINEE", "MENTOR", "EMPLOYER", "ADMIN"]):
-        cols[idx].metric(role.title(), role_counts.get(role, 0))
-
-    st.subheader("Announcements")
-    for ann in sorted(data["announcements"], key=lambda a: a["published_at"], reverse=True)[:5]:
-        st.write(f"- **{ann['title']}** · {ann['audience']} · {fmt_date(ann['published_at'])}")
-
-    st.subheader("Audit log")
-    for event in sorted(data["audit_events"], key=lambda a: a["at"], reverse=True):
-        st.write(f"- {event['actor_role']} {event['action']} {event['entity']} @ {fmt_date(event['at'], True)}")
-
-    csv_content = feedback_csv(data)
-    st.download_button("Download customer feedback CSV", data=csv_content, file_name="customer-feedback.csv", mime="text/csv")
-    st.caption(f"Data stored locally at {DATA_FILE}")
-
-
-def render_announcements(data: Dict[str, Any]) -> None:
-    page_title("Announcements", "Create and browse platform updates.")
-    with st.form("announcement-form", clear_on_submit=True):
-        title = st.text_input("Title")
-        body = st.text_area("Body", height=120)
-        audience = st.selectbox("Audience", ["ALL", "TRAINEES", "MENTORS", "EMPLOYERS"])
-        submitted = st.form_submit_button("Publish announcement")
-        if submitted and title and body:
-            data["announcements"].insert(
-                0,
-                {"id": new_id("ann"), "title": title, "body": body, "audience": audience, "published_at": datetime.utcnow().isoformat()},
-            )
-            persist_data()
-            st.success("Announcement published.")
-
-    st.divider()
-    for ann in sorted(data["announcements"], key=lambda a: a["published_at"], reverse=True):
-        st.write(f"**{ann['title']}** · {ann['audience']} · {fmt_date(ann['published_at'])}")
-        st.caption(ann["body"])
-
-
-def render_progress(data: Dict[str, Any]) -> None:
-    page_title("Progress & achievements", "WSQ milestones, quests, and badges.")
-    trainee = st.selectbox("Choose trainee", data["trainees"], format_func=lambda t: t["name"], key="progress-trainee")
-    trainee_id = trainee["id"]
-
-    certs = [c for c in data["trainee_certifications"] if c["trainee_id"] == trainee_id]
-    quests = [q for q in data["quest_progress"] if q["trainee_id"] == trainee_id]
-    completion = int((len(certs) / max(1, len(quests) or 1)) * 100)
-    completion_display = min(completion, 100)
-    st.progress(completion_display, text=f"{completion_display}% WSQ completion vs quests")
-
-    st.subheader("Certifications")
-    for cert in certs:
-        meta = lookup_by_id(data["certifications"], cert["certification_id"], "name") or "Certification"
-        st.write(f"- {meta} ({fmt_date(cert['issued_at'])})")
-
-    st.subheader("Quest progress")
-    for row in quests:
-        quest = next((q for q in data["quests"] if q["id"] == row["quest_id"]), None)
-        if quest:
-            st.write(f"- {quest['title']} · {row['status']} · {quest['points']} pts")
-
-
-def render_quests(data: Dict[str, Any]) -> None:
-    page_title("Quests", "Active and upcoming quests for trainees.")
-    trainee = st.selectbox("Choose trainee", data["trainees"], format_func=lambda t: t["name"], key="quests-trainee")
-    trainee_id = trainee["id"]
-
-    statuses = {row["quest_id"]: row["status"] for row in data["quest_progress"] if row["trainee_id"] == trainee_id}
-    for quest in sorted(data["quests"], key=lambda q: q["start_at"] or ""):
-        status = statuses.get(quest["id"], "LOCKED")
-        window = f"{fmt_date(quest['start_at'])} — {fmt_date(quest['end_at'])}" if quest.get("end_at") else "Open"
-        st.write(f"**{quest['title']}** · {quest['description']} · {quest['points']} pts · {status} · {window}")
-
-
-def render_badges(data: Dict[str, Any]) -> None:
-    page_title("Badges & ranks", "Available badges and earned highlights.")
-    trainee = st.selectbox("Choose trainee", data["trainees"], format_func=lambda t: t["name"], key="badges-trainee")
-    trainee_id = trainee["id"]
-    earned_ids = {b["badge_id"] for b in data["trainee_badges"] if b["trainee_id"] == trainee_id}
-
-    for badge in data["badges"]:
-        earned = " (earned)" if badge["id"] in earned_ids else ""
-        st.write(f"- {badge.get('icon', '')} {badge['title']} — {badge['description']}{earned}")
-
-
-def render_schedule(data: Dict[str, Any]) -> None:
-    page_title("Schedule & compliance", "Employer shifts and compliance events.")
-    shifts = sorted(data["shifts"], key=lambda s: s["start"])
-    st.subheader("Shifts")
-    for shift in shifts:
-        trainee_name = lookup_by_id(data["trainees"], shift["trainee_id"]) or shift["trainee_id"]
-        st.write(f"- {fmt_date(shift['start'], True)} · {shift['location']} · {trainee_name} ({shift['status']})")
-
-    st.subheader("Compliance")
-    for event in sorted(data["compliance_events"], key=lambda e: e["start"]):
-        st.write(f"- {event['type']} · {fmt_date(event['start'])} · {event.get('notes') or ''}")
-
-
-def render_messages(data: Dict[str, Any]) -> None:
-    page_title("Messages & aftercare", "Secure help desk threads and submissions.")
-    tickets = sorted(data["support_tickets"], key=lambda t: t["created_at"], reverse=True)
-    for ticket in tickets:
-        trainee_name = lookup_by_id(data["trainees"], ticket["trainee_id"]) or ticket["trainee_id"]
-        st.write(f"- {trainee_name} · {ticket['category']} · {ticket['message']} ({ticket['status']})")
-
-    st.subheader("New support note")
-    with st.form("support-form", clear_on_submit=True):
-        trainee_choice = st.selectbox("Trainee (optional)", [""] + [t["name"] for t in data["trainees"]])
-        category = st.selectbox("Category", ["AFTERCARE", "LOGIN", "GENERAL"])
-        message = st.text_area("Message", height=120)
-        submitted = st.form_submit_button("Send to ops")
-        if submitted and message:
-            trainee_id = next((t["id"] for t in data["trainees"] if t["name"] == trainee_choice), None) if trainee_choice else None
-            data["support_tickets"].insert(
-                0,
-                {
-                    "id": new_id("ticket"),
-                    "trainee_id": trainee_id,
-                    "category": category,
-                    "message": message,
-                    "status": "OPEN",
-                    "created_at": datetime.utcnow().isoformat(),
-                },
-            )
-            persist_data()
-            st.success("Support note captured.")
+    # Admin extras
+    if st.session_state.get("hb_user", {}).get("role") == "ADMIN":
+        st.markdown("### Admin controls")
+        role_counts = Counter(user["role"] for user in data["users"])
+        cols = st.columns(4)
+        for idx, role in enumerate(["TRAINEE", "MENTOR", "EMPLOYER", "ADMIN"]):
+            cols[idx].metric(role.title(), role_counts.get(role, 0))
+        csv_content = feedback_csv(data)
+        st.download_button("Download customer feedback CSV", data=csv_content, file_name="customer-feedback.csv", mime="text/csv")
+        st.caption(f"Data stored locally at {DATA_FILE}")
 
 
 def render_uploads(data: Dict[str, Any]) -> None:
@@ -355,32 +217,17 @@ def render_uploads(data: Dict[str, Any]) -> None:
             st.success(f"Uploaded {file.name}")
 
 
-def render_help(data: Dict[str, Any]) -> None:
-    page_title("Help & aftercare", "Helplines and secure messaging.")
-    st.subheader("Helplines")
-    st.write("- Ops hotline: +65 6000 1234 (24/7 urgent matters)")
-    st.write("- Aftercare WhatsApp: +65 8111 9999 (9am-9pm daily)")
-
-    st.subheader("Secure message")
-    note = st.text_area("How can we help?")
-    if st.button("Send message", disabled=not note):
-        data["support_tickets"].insert(
-            0,
-            {
-                "id": new_id("ticket"),
-                "trainee_id": None,
-                "category": "HELP",
-                "message": note,
-                "status": "OPEN",
-                "created_at": datetime.utcnow().isoformat(),
-            },
-        )
-        persist_data()
-        st.success("Message received by the ops team.")
+def feedback_csv(data: Dict[str, Any]) -> str:
+    buffer = StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(["traineeName", "rating", "comment", "receiptCode", "createdAt"])
+    for row in data["customer_feedback"]:
+        trainee_name = lookup_by_id(data["trainees"], row["trainee_id"]) or row["trainee_id"]
+        writer.writerow([trainee_name, row["rating"], row["comment"], row.get("receipt_code", ""), row["created_at"]])
+    return buffer.getvalue()
 
 
 def render_public_feedback(data: Dict[str, Any]) -> None:
-    page_title("Public praise & feedback", "Quick form that mirrors the Turnstile-protected Next.js flow.")
     trainees = data["trainees"]
     with st.form("feedback-form", clear_on_submit=True):
         trainee = st.selectbox("Trainee", trainees, format_func=lambda t: t["name"])
@@ -410,48 +257,46 @@ def render_public_feedback(data: Dict[str, Any]) -> None:
 
 
 def sidebar_nav() -> str:
-    st.sidebar.markdown("### 🍜 Hawker Boys")
-    nav = st.sidebar.radio("Navigation", NAV_ITEMS)
+    st.sidebar.markdown("### 🔥 Hawker Boys")
+    st.sidebar.caption("From humble beginnings · Light emerging from darkness")
+
+    # Lightweight login gate: defaults to regular user; admin unlocks extras.
+    if "hb_user" not in st.session_state:
+        st.session_state["hb_user"] = {"email": "trainee@hawkerboys.com", "role": "USER"}
+
+    with st.sidebar.form("login-form"):
+        email = st.text_input("Email", value=st.session_state["hb_user"]["email"])
+        role = st.selectbox("Role", ["USER", "ADMIN"], index=0)
+        submitted = st.form_submit_button("Sign in")
+        if submitted:
+            st.session_state["hb_user"] = {"email": email, "role": role}
+            st.success(f"Signed in as {role}")
+
+    nav_labels = [f"{icon} {label}" for label, icon in NAV_ITEMS]
+    nav_choice = st.sidebar.radio("Navigation", nav_labels)
+    nav = NAV_ITEMS[nav_labels.index(nav_choice)][0]
+
+    st.sidebar.markdown("**Demo accounts**")
+    st.sidebar.caption("Regular: trainee@hawkerboys.com  \nAdmin: admin@hawkerboys.com")
+
     if st.sidebar.button("Reset sample data"):
         st.session_state["hb_data"] = reset_data()
         st.sidebar.success("Seed data restored.")
         st.rerun()
-    st.sidebar.caption("Streamlit app lives alongside the original Next.js codebase.")
+
+    st.sidebar.caption("Uploads live on their own page; everything else is on the dashboard.")
     return nav
 
 
 def main() -> None:
+    inject_brand_css()
     data = get_data()
     nav = sidebar_nav()
 
-    if nav == "Home":
+    if nav == "Dashboard":
         render_home(data)
-    elif nav == "Trainee dashboard":
-        render_trainee_dashboard(data)
-    elif nav == "Mentor dashboard":
-        render_mentor_dashboard(data)
-    elif nav == "Employer dashboard":
-        render_employer_dashboard(data)
-    elif nav == "Admin dashboard":
-        render_admin_dashboard(data)
-    elif nav == "Announcements":
-        render_announcements(data)
-    elif nav == "Progress":
-        render_progress(data)
-    elif nav == "Quests":
-        render_quests(data)
-    elif nav == "Badges":
-        render_badges(data)
-    elif nav == "Schedule & compliance":
-        render_schedule(data)
-    elif nav == "Messages":
-        render_messages(data)
     elif nav == "Uploads":
         render_uploads(data)
-    elif nav == "Help":
-        render_help(data)
-    elif nav == "Public feedback":
-        render_public_feedback(data)
     else:
         render_home(data)
 
