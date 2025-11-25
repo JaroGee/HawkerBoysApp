@@ -16,6 +16,37 @@ LOGO_PATH = ASSETS_DIR / "Logo_bgr.png"
 
 st.set_page_config(page_title="Hawker Boys Portal", layout="wide", page_icon=str(LOGO_PATH if LOGO_PATH.exists() else "🔥"))
 
+
+def load_logo_bytes() -> Optional[bytes]:
+    for path in [LOGO_PATH, ASSETS_DIR / "Hawker_Boys_logo_new.png"]:
+        if path.exists():
+            return path.read_bytes()
+    return None
+
+
+# Global UI styling for the portal.
+st.markdown(
+    """
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+      .block-container { max-width: 1100px !important; padding-top: 1.5rem; padding-bottom: 2rem; }
+      html, body, .stApp { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #222222; background: #F7F3EC; }
+      .hb-section-title { font-family: 'Montserrat', 'Inter', sans-serif; font-size: 18px; font-weight: 700; margin: 18px 0 12px 0; padding-bottom: 6px; border-bottom: 2px solid #F26A21; color: #222222; }
+      .hb-section { font-family: 'Montserrat', 'Inter', sans-serif; font-size: 18px; font-weight: 700; margin: 18px 0 6px 0; color: #222222; }
+      .hb-card { background: #FFFFFF; border: 1px solid #E2E2E2; border-radius: 10px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+      .hb-ann-title { font-weight: 700; font-size: 16px; color: #222222; margin-bottom: 4px; }
+      .hb-ann-date { font-size: 12px; color: #6C6C6C; margin-bottom: 6px; }
+      .hb-progress-label { font-weight: 600; font-size: 14px; margin-top: 8px; margin-bottom: 4px; }
+      .hb-eyebrow { color: #F26A21; letter-spacing: 0.08em; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
+      .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #1F1F1F; margin: 0 0 6px 0; font-size: 26px; line-height: 1.2; }
+      .hb-desc { color: #3A3A3A; }
+      .hb-link { color: #F26A21; text-decoration: none; font-weight: 600; }
+      img[alt="streamlitApp"] { display: none; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 UPLOAD_DIR = Path(__file__).parent / "streamlit_uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
@@ -54,40 +85,14 @@ def page_title(title: str, description: str | None = None) -> None:
         st.markdown(f"<p class='hb-desc'>{description}</p>", unsafe_allow_html=True)
 
 
-def inject_brand_css() -> None:
-    st.markdown(
-        """
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap');
-          html, body, .stApp { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #0D0D0D; background: #EAE7E2; }
-          .material-icons, .stSvg { font-family: 'Material Icons Outlined' !important; }
-          .hb-hero { padding: 12px 0; }
-          .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #0D0D0D; margin: 2px 0 4px 0; font-size: 26px; }
-          .hb-eyebrow { color: #FF6B00; letter-spacing: 0.08em; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
-          .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #0D0D0D; margin: 0 0 6px 0; }
-          .hb-eyebrow { color: #FF6B00; letter-spacing: 0.08em; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
-          .hb-desc { color: #2A2A2A; }
-          .hb-section { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; margin: 18px 0 6px 0; color: #0D0D0D; font-size: 18px; }
-          .stProgress > div > div { background: linear-gradient(90deg, #FF6B00, #C44A00); }
-          .hb-card { background: #ffffff; border: 1px solid #B8B8B8; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
-          .hb-chip { display: inline-block; background: rgba(255,107,0,0.12); color: #FF6B00; padding: 4px 10px; border-radius: 999px; font-size: 12px; }
-          .stDownloadButton button, .stButton button { background: #FF6B00; color: #0D0D0D; border: none; }
-          .stDownloadButton button:hover, .stButton button:hover { background: #C44A00; color: #0D0D0D; }
-          .stTextInput > div > input, textarea, select { background: #F5F5F5 !important; color: #0D0D0D !important; border-radius: 8px; border: 1px solid #B8B8B8; }
-          .stSlider > div[data-baseweb="slider"] > div { background: #FF6B00 !important; }
-          .st-emotion-cache-1av9zj7 p { color: #2A2A2A; }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
 def render_home(data: Dict[str, Any]) -> None:
     hero = st.container()
     with hero:
         cols = st.columns([1, 3])
         with cols[0]:
-            st.image(str(LOGO_PATH if LOGO_PATH.exists() else ASSETS_DIR / "Hawker_Boys_logo_new.png"), width=150)
+            logo_bytes = load_logo_bytes()
+            if logo_bytes:
+                st.image(logo_bytes, width=150)
         with cols[1]:
             st.markdown("<div class='hb-hero'>", unsafe_allow_html=True)
             st.markdown("<div class='hb-eyebrow'>Hawker Boys · From humble beginnings</div>", unsafe_allow_html=True)
@@ -95,47 +100,97 @@ def render_home(data: Dict[str, Any]) -> None:
             st.markdown("<div class='hb-desc'>Announcements first, then programme health at a glance. Admins sign in from the sidebar for extra controls.</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("### Announcements & Updates")
+    st.divider()
+
+    # Programme health metrics
+    metrics_cols = st.columns(3)
+    metrics_cols[0].metric("Active trainees", len(data["trainees"]))
+    # WSQ completion reuses existing calculation.
+    certs_total = len(data["trainee_certifications"])
+    quests_total = len(data["quest_progress"]) or 1
+    wsq_completion_rate = min(int((certs_total / quests_total) * 100), 100)
+    metrics_cols[1].metric("WSQ completion rate", f"{wsq_completion_rate}%")
+    placed = sum(1 for s in data["shifts"] if s.get("status") == "CONFIRMED")
+    metrics_cols[2].metric("Placed in stalls", placed)
+
+    st.markdown("<div class='hb-section-title'>Announcements & updates</div>", unsafe_allow_html=True)
     ann_col1, ann_col2 = st.columns([2, 1])
     with ann_col1:
-        st.markdown("<div class='hb-card'>", unsafe_allow_html=True)
         announcements = sorted(data["announcements"], key=lambda a: a["published_at"], reverse=True)[:4]
         for ann in announcements:
-            st.markdown(f"**{ann['title']}**  \n{ann['body']}  \n<span style='color:#B8B8B8;'>{fmt_date(ann['published_at'])}</span>", unsafe_allow_html=True)
-            st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"""
+                <div class="hb-card">
+                  <div class="hb-ann-title">{ann['title']}</div>
+                  <div class="hb-ann-date">{fmt_date(ann['published_at'])}</div>
+                  <div>{ann['body']}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
     with ann_col2:
-        st.markdown("<div class='hb-card'>", unsafe_allow_html=True)
-        cols = st.columns(3)
-        cols[0].metric("Trainees", len(data["trainees"]))
-        cols[1].metric("Mentors", len(data["mentors"]))
-        cols[2].metric("Employers", len(data["employers"]))
-        st.markdown("</div>", unsafe_allow_html=True)
+        # Upcoming/this week summary (placeholder uses first shift/compliance if available).
+        upcoming_shift = sorted(data["shifts"], key=lambda s: s["start"])[0] if data["shifts"] else None
+        upcoming_compliance = sorted(data["compliance_events"], key=lambda e: e["start"])[0] if data["compliance_events"] else None
+        summary_lines = []
+        if upcoming_shift:
+            summary_lines.append(f"Shift: {fmt_date(upcoming_shift['start'], True)} @ {upcoming_shift['location']}")
+        if upcoming_compliance:
+            summary_lines.append(f"Compliance: {upcoming_compliance['type']} on {fmt_date(upcoming_compliance['start'])}")
+        if not summary_lines:
+            summary_lines.append("No scheduled items this week. Add upcoming shifts to surface here.")
+        st.markdown(
+            f"""
+            <div class="hb-card">
+              <div class="hb-ann-title">This week</div>
+              <div class="hb-ann-date">Snapshot of key events</div>
+              <div>{"<br/>".join(summary_lines)}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-    # Progress & quests
-    page_title("Progress & achievements")
-    progress_cols = st.columns(2)
-    trainee = data["trainees"][0] if data["trainees"] else None
-    if trainee:
-        trainee_id = trainee["id"]
-        certs = [c for c in data["trainee_certifications"] if c["trainee_id"] == trainee_id]
-        quests = [q for q in data["quest_progress"] if q["trainee_id"] == trainee_id]
-        completion = int((len(certs) / max(1, len(quests) or 1)) * 100)
-        completion_display = min(completion, 100)
-        progress_cols[0].progress(completion_display, text=f"{completion_display}% WSQ completion vs quests")
-        progress_cols[0].markdown("**Certifications**")
-        for cert in certs:
-            cert_meta = lookup_by_id(data["certifications"], cert["certification_id"], "name")
-            progress_cols[0].write(f"- {cert_meta or 'Certification'} ({fmt_date(cert['issued_at'])})")
-        progress_cols[1].markdown("**Quests & Badges**")
-        for row in quests:
-            quest = next((q for q in data["quests"] if q["id"] == row["quest_id"]), None)
-            if quest:
-                progress_cols[1].write(f"- {quest['title']} · {row['status']} · {quest['points']} pts")
-        earned_ids = {b["badge_id"] for b in data["trainee_badges"] if b["trainee_id"] == trainee_id}
-        for badge in data["badges"]:
-            if badge["id"] in earned_ids:
-                progress_cols[1].write(f"🏅 {badge['title']} — {badge['description']}")
+    st.markdown("<div class='hb-section-title'>Progress & achievements</div>", unsafe_allow_html=True)
+    progress_cols = st.columns([3, 1])
+
+    # Left: stacked KPIs
+    with progress_cols[0]:
+        trainee = data["trainees"][0] if data["trainees"] else None
+        if trainee:
+            trainee_id = trainee["id"]
+            certs = [c for c in data["trainee_certifications"] if c["trainee_id"] == trainee_id]
+            quests = [q for q in data["quest_progress"] if q["trainee_id"] == trainee_id]
+            completion = int((len(certs) / max(1, len(quests) or 1)) * 100)
+        else:
+            completion = 0
+
+        mentor_sessions = len(data["assessments"])
+        mentor_goal = max(1, len(data["trainees"]) * 2)
+        mentor_attendance = min(int((mentor_sessions / mentor_goal) * 100), 100)
+
+        feedback_positive = sum(1 for f in data["customer_feedback"] if f.get("rating", 0) >= 4)
+        feedback_total = max(1, len(data["customer_feedback"]))
+        feedback_rate = min(int((feedback_positive / feedback_total) * 100), 100)
+
+        st.markdown("<div class='hb-progress-label'>WSQ completion vs goal</div>", unsafe_allow_html=True)
+        st.progress(completion)
+        st.markdown("<div class='hb-progress-label'>Mentor session attendance</div>", unsafe_allow_html=True)
+        st.progress(mentor_attendance)
+        st.markdown("<div class='hb-progress-label'>Positive feedback rate</div>", unsafe_allow_html=True)
+        st.progress(feedback_rate)
+
+    # Right: quests & badges card
+    with progress_cols[1]:
+        st.markdown(
+            """
+            <div class="hb-card">
+              <div class="hb-ann-title">Quests & badges</div>
+              <div class="hb-ann-date">View trainee quests and earned badges.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.button("Open quests view")
 
     page_title("Shifts, compliance, and support")
     ops_cols = st.columns(3)
@@ -291,7 +346,6 @@ def sidebar_nav() -> str:
 
 
 def main() -> None:
-    inject_brand_css()
     data = get_data()
     nav = sidebar_nav()
 
