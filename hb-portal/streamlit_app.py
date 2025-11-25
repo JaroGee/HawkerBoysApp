@@ -6,6 +6,7 @@ from datetime import datetime
 from io import StringIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+import base64
 
 import streamlit as st
 
@@ -13,6 +14,7 @@ from streamlit_data import DATA_FILE, load_data, new_id, reset_data, save_data
 
 ASSETS_DIR = Path(__file__).parent / "Assets"
 LOGO_PATH = ASSETS_DIR / "Logo_bgr.png"
+ICON_BG_PATH = ASSETS_DIR / "icon_bgr.png"
 
 st.set_page_config(page_title="Hawker Boys Portal", layout="wide", page_icon=str(LOGO_PATH if LOGO_PATH.exists() else "🔥"))
 
@@ -24,24 +26,48 @@ def load_logo_bytes() -> Optional[bytes]:
     return None
 
 
-# Global UI styling for the portal.
+def load_icon_data_uri() -> Optional[str]:
+    path = ICON_BG_PATH
+    if path.exists():
+        encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
+        return f"data:image/png;base64,{encoded}"
+    return None
+
+
+# Global UI styling for the portal with optional watermark background.
+background_image = load_icon_data_uri()
+watermark_layer = (
+    f"background-image: linear-gradient(rgba(247,243,236,0.92), rgba(247,243,236,0.92)), url('{background_image}');"
+    "background-repeat: no-repeat;"
+    "background-position: center 160px;"
+    "background-size: 520px;"
+    "background-attachment: fixed;"
+    if background_image
+    else "background: #F7F3EC;"
+)
+
 st.markdown(
-    """
+    f"""
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap');
-      .block-container { max-width: 1100px !important; padding-top: 1.5rem; padding-bottom: 2rem; }
-      html, body, .stApp { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #222222; background: #F7F3EC; }
-      .hb-section-title { font-family: 'Montserrat', 'Inter', sans-serif; font-size: 18px; font-weight: 700; margin: 18px 0 12px 0; padding-bottom: 6px; border-bottom: 2px solid #F26A21; color: #222222; }
-      .hb-section { font-family: 'Montserrat', 'Inter', sans-serif; font-size: 18px; font-weight: 700; margin: 18px 0 6px 0; color: #222222; }
-      .hb-card { background: #FFFFFF; border: 1px solid #E2E2E2; border-radius: 10px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-      .hb-ann-title { font-weight: 700; font-size: 16px; color: #222222; margin-bottom: 4px; }
-      .hb-ann-date { font-size: 12px; color: #6C6C6C; margin-bottom: 6px; }
-      .hb-progress-label { font-weight: 600; font-size: 14px; margin-top: 8px; margin-bottom: 4px; }
-      .hb-eyebrow { color: #F26A21; letter-spacing: 0.08em; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
-      .hb-title { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #1F1F1F; margin: 0 0 6px 0; font-size: 26px; line-height: 1.2; }
-      .hb-desc { color: #3A3A3A; }
-      .hb-link { color: #F26A21; text-decoration: none; font-weight: 600; }
-      img[alt="streamlitApp"] { display: none; }
+      .block-container {{ max-width: 1100px !important; padding-top: 1.5rem; padding-bottom: 2rem; }}
+      html, body, .stApp {{
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color: #222222;
+        background: #F7F3EC;
+        {watermark_layer}
+      }}
+      .hb-section-title {{ font-family: 'Montserrat', 'Inter', sans-serif; font-size: 18px; font-weight: 700; margin: 18px 0 12px 0; padding-bottom: 6px; border-bottom: 2px solid #F26A21; color: #222222; }}
+      .hb-section {{ font-family: 'Montserrat', 'Inter', sans-serif; font-size: 18px; font-weight: 700; margin: 18px 0 6px 0; color: #222222; }}
+      .hb-card {{ background: #FFFFFF; border: 1px solid #E2E2E2; border-radius: 10px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }}
+      .hb-ann-title {{ font-weight: 700; font-size: 16px; color: #222222; margin-bottom: 4px; }}
+      .hb-ann-date {{ font-size: 12px; color: #6C6C6C; margin-bottom: 6px; }}
+      .hb-progress-label {{ font-weight: 600; font-size: 14px; margin-top: 8px; margin-bottom: 4px; }}
+      .hb-eyebrow {{ color: #F26A21; letter-spacing: 0.08em; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }}
+      .hb-title {{ font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 700; color: #1F1F1F; margin: 0 0 6px 0; font-size: 26px; line-height: 1.2; }}
+      .hb-desc {{ color: #3A3A3A; }}
+      .hb-link {{ color: #F26A21; text-decoration: none; font-weight: 600; }}
+      img[alt="streamlitApp"] {{ display: none; }}
     </style>
     """,
     unsafe_allow_html=True,
